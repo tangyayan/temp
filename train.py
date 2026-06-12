@@ -160,6 +160,7 @@ def train(model, train_loader, dev_loader, cfg: Config):
         t0         = time.time()
  
         for batch in train_loader:
+            model.train()
             global_step += 1
             input_ids = batch["input_ids"].to(device)
             labels    = batch["labels"].to(device)
