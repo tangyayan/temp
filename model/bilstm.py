@@ -14,9 +14,6 @@ class BiLSTM(nn.Module):
             self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=PAD_IDX)
         self.lstm = nn.LSTM(config.embed, config.hidden_size, config.num_layers,
                             bidirectional=True, batch_first=True, dropout=config.dropout)
-        self.tanh1 = nn.Tanh()
-        self.w = nn.Linear(config.hidden_size * 2, 1, bias=False)
-        # self.tanh2 = nn.Tanh()
         self.fc1 = nn.Linear(config.hidden_size * 2, config.hidden_size2)
         self.fc = nn.Linear(config.hidden_size2, config.num_classes)
 
