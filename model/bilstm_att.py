@@ -43,7 +43,7 @@ class BiLSTM_att(nn.Module):
         out = F.relu(out)
         out = self.fc1(out)
         out = self.fc(out)  # [batch_size, num_classes]
-        return out, alpha
+        return out
     
 if __name__ == "__main__":
     cfg = Config(dataset="./mydatasets/jieba", embedding="random", dataset_method="jieba")
