@@ -17,7 +17,7 @@ class BiLSTM(nn.Module):
         self.fc1 = nn.Linear(config.hidden_size * 2, config.hidden_size2)
         self.fc = nn.Linear(config.hidden_size2, config.num_classes)
 
-    def forward(self, x, seq_lens=None):
+    def forward(self, x, seq_lens):
         emb = self.embedding(x)  # [batch_size, L, embeding]
 
         # 计算mask
