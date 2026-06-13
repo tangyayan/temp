@@ -78,7 +78,7 @@ class Transformer(nn.Module):
             self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
         else:
             self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=PAD_IDX)
-        self.pos_encoder = PositionalEncoding(config.pad_size, config.embed, config.dropout)
+        self.pos_encoder = PositionalEncoding(config.pad_size+1, config.embed, config.dropout) # [cls]
         self.layers = nn.ModuleList([TransformerBlock(config) for _ in range(config.num_layers)])
         self.fc_out = nn.Linear(config.embed, config.num_classes)
         self.cls_emb = nn.Parameter(torch.randn(1, 1, config.embed))  # [1, 1, D_model]
