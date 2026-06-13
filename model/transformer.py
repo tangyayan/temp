@@ -82,6 +82,7 @@ class Transformer(nn.Module):
         self.layers = nn.ModuleList([TransformerBlock(config) for _ in range(config.num_layers)])
         self.fc_out = nn.Linear(config.embed, config.num_classes)
         self.cls_emb = nn.Parameter(torch.randn(1, 1, config.embed))  # [1, 1, D_model]
+        # self.attention_pooling = AttentionPooling(config.embed)
 
     def forward(self, x, seq_lens):
         x = self.embedding(x)  # [B, L, D]
@@ -98,7 +99,27 @@ class Transformer(nn.Module):
         # cls
         cls_out = x[:, 0, :]  # [B, D_model]
         x = self.fc_out(cls_out)  # [B, num_classes]
+
+        # attention pooling
+        # x = self.attention_pooling(x, seq_lens)  # [B, D_model]
+        # x = self.fc_out(x)  # [B, num_classes]
         return x
+
+class AttentionPooling(nn.Module):
+    def __init__(self, d_model):
+        super(AttentionPooling, self).__init__()
+        self.w = nn.Linear(d_model, 1)
+
+    def forward(self, x, seq_lens):
+        scores = self.w(x).squeeze(-1)  # [B, L]
+        B, L, _ = x.size()
+        mask = torch.arange(L, device=x.device).expand(B, L)
+        mask = mask < seq_lens.unsqueeze(1) # [B, L]
+        scores = scores.masked_fill(~mask, float('-inf'))  # 填充无效位置
+        attn_weights = torch.softmax(scores, dim=-1)  # [B, L]
+        pooled = attn_weights.unsqueeze(-1) * x  # [B, L, D]
+        pooled = pooled.sum(dim=1)  # [B, D]
+        return pooled
 
 class TransformerBlock(nn.Module):
     def __init__(self, config: Config):
