@@ -75,8 +75,10 @@ def plot_training_curves(history: dict, save_dir: str, model_name: str = ""):
     e_f1      = history.get("dev_macro_f1",  [])
 
     # 最优 epoch（dev_macro_f1 最大处）
-    best_epoch_idx = int(np.argmax(e_f1)) if e_f1 else None
-    best_step      = es[best_epoch_idx] if best_epoch_idx is not None else None
+    # best_epoch_idx = int(np.argmax(e_f1)) if e_f1 else None
+    # best_step      = es[best_epoch_idx] if best_epoch_idx is not None else None
+    best_step_idx = int(np.argmax(s_df1)) if s_df1 else None
+    best_step     = ss[best_step_idx] if best_step_idx is not None else None
 
     have_steps = len(ss) > 0
 
@@ -96,7 +98,7 @@ def plot_training_curves(history: dict, save_dir: str, model_name: str = ""):
         ax.spines[["top", "right"]].set_visible(False)
         if best_step is not None:
             ax.axvline(x=best_step, color=C_BEST, linewidth=1.2,
-                       linestyle=":", alpha=0.7, label="Best epoch")
+                       linestyle=":", alpha=0.7, label="Best step")
 
     def _epoch_x(ax):
         """在 x 轴下方加 epoch 刻度标签。"""
@@ -185,10 +187,21 @@ def plot_training_curves(history: dict, save_dir: str, model_name: str = ""):
         _annotate_epoch_points(ax, es, e_f1, C_F1)
 
         # 最优点特别标注
-        if best_epoch_idx is not None:
-            bx, by = es[best_epoch_idx], e_f1[best_epoch_idx]
+        # if best_epoch_idx is not None:
+        #     bx, by = es[best_epoch_idx], e_f1[best_epoch_idx]
+        #     ax.scatter([bx], [by], color=C_BEST, s=80, zorder=5,
+        #                label=f"Best F1={by:.4f} (E{best_epoch_idx+1})")
+        #     ax.annotate(
+        #         f"Best\nF1={by:.4f}",
+        #         xy=(bx, by), xytext=(12, -20),
+        #         textcoords="offset points",
+        #         fontsize=8, color=C_BEST,
+        #         arrowprops=dict(arrowstyle="->", color=C_BEST, lw=1.0),
+        #     )
+        if best_step_idx is not None:
+            bx, by = ss[best_step_idx], s_df1[best_step_idx]
             ax.scatter([bx], [by], color=C_BEST, s=80, zorder=5,
-                       label=f"Best F1={by:.4f} (E{best_epoch_idx+1})")
+                       label=f"Best F1={by:.4f} (S{best_step_idx+1})")
             ax.annotate(
                 f"Best\nF1={by:.4f}",
                 xy=(bx, by), xytext=(12, -20),
@@ -233,27 +246,26 @@ def draw_confusion_matrix(test_result_path: str, save_dir: str):
 
 def main():
     parser = argparse.ArgumentParser(description="绘制训练曲线")
-    parser.add_argument("--history", default="./result/BiLSTM_att/history.json",
-                        help="history.json 路径")
-    parser.add_argument("--out_dir",     default="./result/BiLSTM_att",
-                        help="输出图片路径")
-    parser.add_argument("--model",   default="BiLSTM_att",
-                        help="模型名称（显示在标题中）")
-    parser.add_argument("--test_result", default="./result/BiLSTM_att/test_results.json",
-                        help="测试结果 JSON 路径")
+    parser.add_argument("--model_name", default="BiLSTM", help="模型文件名")
+    parser.add_argument("--result_dir",  default="./result", help="输出目录")
+
     args = parser.parse_args()
 
-    os.makedirs(args.out_dir, exist_ok=True)
+    out_dir = os.path.join(args.result_dir, args.model_name)      # 输出目录：result/模型名称/
+    history_path = os.path.join(out_dir, "history.json")          # history 文件路径：result/模型名称/history.json
+    test_result_path = os.path.join(out_dir, "test_results.json") # 测试结果文件路径：result/模型名称/test_results.json
 
-    if not os.path.exists(args.history):
-        print(f"找不到 history 文件: {args.history}")
+    os.makedirs(out_dir, exist_ok=True)
+
+    if not os.path.exists(history_path):
+        print(f"找不到 history 文件: {history_path}")
         return
 
-    with open(args.history, "r") as f:
+    with open(history_path, "r") as f:
         history = json.load(f)
 
-    plot_training_curves(history, save_dir=args.out_dir, model_name=args.model)
-    draw_confusion_matrix(args.test_result, save_dir=args.out_dir)
+    plot_training_curves(history, save_dir=out_dir, model_name=args.model_name)
+    draw_confusion_matrix(test_result_path, save_dir=out_dir)
 
 
 if __name__ == "__main__":
