@@ -23,7 +23,7 @@ class TNEWSDataset(Dataset):
     """
     def __init__(self, data_path: str, config: Config):
         self.samples = []
-        if config.dataset_method == "jieba":
+        if config.dataset_method == "jieba" or config.dataset_method == "char":
             with open(config.vocab_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             self.vocab = data["word2idx"]
