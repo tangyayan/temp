@@ -16,7 +16,7 @@ def load_jsonl(path):
                 continue
     return records
 
-def save_hyperparameters(conf: Config, embedding):
+def save_hyperparameters(conf: Config, embedding, elapsed_time):
     """将超参数保存到 JSON 文件"""
     
     hyperparams = {
@@ -54,7 +54,10 @@ def save_hyperparameters(conf: Config, embedding):
             "pad_size": conf.pad_size,
             "dataset_method": conf.dataset_method,
             "embedding_pretrained": embedding if embedding != 'random' else None,
-        }
+        },
+
+        # 训练时间
+        "training_time_seconds": elapsed_time
     }
     
     os.makedirs(conf.save_dir, exist_ok=True)

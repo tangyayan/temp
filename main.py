@@ -1,21 +1,12 @@
 """
-main.py — 实验入口
-
-职责：
-  1. 解析命令行参数 / 超参数配置
-  2. 加载预处理好的数据集，构建 DataLoader
-  3. 构建模型
-  4. 调用 train() 进行训练与验证集早停
-  5. 调用 final_test() 在测试集上做最终评估
-  6. 打印模型参数量与训练配置
+main.py — 主程序入口
 
 用法示例：
-  python main.py --model textcnn --epochs 30 --lr 1e-3 --batch_size 32
-  python main.py --model bilstm  --epochs 30 --lr 5e-4 --embed_dim 128 --hidden_dim 128
+    python main.py
 """
 
 import os
-import argparse
+import time
 import json
 import torch
 from torch.utils.data import DataLoader, Subset
@@ -32,7 +23,7 @@ def count_parameters(model) -> int:
 
 
 def main():
-    dataset = "char"  # "jieba" 或 "char"
+    dataset = "./mydatasets/char"  
     embedding = "sogou"  # "sogou" 或 "random"
     datamethod = "char"  # "jieba" 或 "char" 
     conf = Config(dataset=dataset, embedding=embedding, dataset_method=datamethod)
@@ -85,13 +76,15 @@ def main():
     # 创建文件夹
     os.makedirs(conf.save_dir, exist_ok=True)
 
+    start_time = time.time()
     history = train(model, train_loader, dev_loader, conf)
+    elapsed_time = time.time() - start_time
 
     best_model_path = os.path.join(conf.save_dir, "best_model.pt")
     final_test(model, best_model_path, test_loader, conf, save_dir=conf.save_dir)
 
     # 写入超参数
-    save_hyperparameters(conf, embedding)
+    save_hyperparameters(conf, embedding, elapsed_time)
 
 
 if __name__ == "__main__":
