@@ -22,10 +22,11 @@ import copy
 import torch
 import torch.nn as nn
 import numpy as np
-from config import Config
+from config import Config, PAD_IDX
 from sklearn.metrics import (
-    accuracy_score, f1_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
+    accuracy_score, f1_score, classification_report, confusion_matrix
 )
+from sklearn.utils.class_weight import compute_class_weight
 
 from dataset import LABELSTR
 
@@ -98,7 +99,17 @@ def train(model, train_loader, dev_loader, cfg: Config):
     device = cfg.device
     model  = model.to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    # 增加类别权重
+    if cfg.ce_weights:
+        train_labels = []
+        for batch in train_loader:
+            labels = batch["labels"].cpu().numpy().tolist()
+            train_labels.extend(labels)
+        weight = compute_class_weight(class_weight="balanced", classes=np.unique(train_labels), y=train_labels)
+        criterion = nn.CrossEntropyLoss(weight=torch.tensor(weight, dtype=torch.float).to(device))
+    else:
+        criterion = nn.CrossEntropyLoss()
+    
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=cfg.learning_rate,

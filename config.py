@@ -17,7 +17,7 @@ class Config(object):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
 
         # model
-        self.model_name = 'BiLSTM_att'                                  # !模型名称
+        self.model_name = 'BiLSTM'                                  # !模型名称
         self.embedding_pretrained = torch.load(f'{dataset}/{embedding}.pt', weights_only=True)\
             if embedding != 'random' else None                          # 预训练词向量
         self.hidden_size = 128                                          # lstm隐藏层
@@ -41,6 +41,7 @@ class Config(object):
             if self.embedding_pretrained is not None else 300           # 字向量维度, 若使用了预训练词向量，则维度统一
         self.patience = 1000                                            # 若超过 1000 batch F1还没提升，则提前结束训练
         self.grad_clip = 5.0                                            # 梯度裁剪阈值
+        self.ce_weights = False                                          # 是否使用类别权重（针对类别不平衡问题）
 
         # train_print
         self.print_step = 10                                            # 每多少步打印一次训练状态

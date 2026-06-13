@@ -1,14 +1,7 @@
 """
 plot.py — 训练曲线可视化
-
-读取 history.json，生成 4 张子图：
-  ① Loss 曲线   — step 级窗口 train loss  +  epoch 级 train/dev loss 标注
-  ② Acc 曲线    — step 级窗口 train acc   +  epoch 级 train/dev acc  标注
-  ③ Dev Acc     — step 级 dev acc         +  epoch 级 dev acc 标注
-  ④ Dev Macro-F1 — epoch 级（含早停标注）
-
 用法：
-  python plot.py --history checkpoints/history.json --out checkpoints/curves.png
+  python plot.py --model_name BiLSTM --result_dir ./result
   python plot.py                                      # 使用默认路径
 """
 

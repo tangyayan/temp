@@ -202,3 +202,19 @@ self.embedding_pretrained = "sougou"
 "accuracy": 0.5381394873889513, "macro_f1": 0.5085490817270223,
 
 ![alt text](image/report/training_curves_11.png) 
+
+增加类别权重，由于类别差距过大
+$$w_c = \frac{\text{总样本数}}{类别数 \times 该类样本数}$$
+
+结果是stock上升了，但是其他又下降了
+![alt text](image/report/ttt.png)
+
+### transformer
+
+#### 绝对位置编码
+
+$$
+PE(pos,2i)=\sin\left(\frac{pos}{10000^{2i/d}}\right)\\
+
+PE(pos,2i+1)=\cos\left(\frac{pos}{10000^{2i/d}}\right)
+$$
