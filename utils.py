@@ -1,4 +1,6 @@
 import json
+from config import Config, DATASET_SEED, DATASET_SPLIT
+import os
 
 def load_jsonl(path):
     """读取 JSONL 文件，返回列表"""
@@ -13,6 +15,55 @@ def load_jsonl(path):
             except json.JSONDecodeError:
                 continue
     return records
+
+def save_hyperparameters(conf: Config, embedding):
+    """将超参数保存到 JSON 文件"""
+    
+    hyperparams = {
+        # 全局常量
+        "DATASET_SEED": DATASET_SEED,
+        "DATASET_SPLIT": DATASET_SPLIT,
+        
+        # 基础配置
+        "seed": conf.seed,
+        
+        # 模型参数
+        "model": {
+            "model_name": conf.model_name,
+            "hidden_size": conf.hidden_size,
+            "num_layers": conf.num_layers,
+            "hidden_size2": conf.hidden_size2,
+        },
+        
+        # 训练参数
+        "train": {
+            "dropout": conf.dropout,
+            "num_epochs": conf.num_epochs,
+            "batch_size": conf.batch_size,
+            "learning_rate": conf.learning_rate,
+            "weight_decay": conf.weight_decay,
+            "scheduler": conf.scheduler,
+            "embed": conf.embed,
+            "patience": conf.patience,
+            "grad_clip": conf.grad_clip,
+            "print_step": conf.print_step,
+        },
+        
+        # 数据集参数
+        "dataset": {
+            "pad_size": conf.pad_size,
+            "dataset_method": conf.dataset_method,
+            "embedding_pretrained": embedding if embedding != 'random' else None,
+        }
+    }
+    
+    os.makedirs(conf.save_dir, exist_ok=True)
+    save_path = os.path.join(conf.save_dir, "hyperparameters.json")
+    
+    with open(save_path, 'w', encoding='utf-8') as f:
+        json.dump(hyperparams, f, indent=4, ensure_ascii=False)
+    
+    print(f"超参数已保存至: {save_path}")
 
 def analysis_attention(model_path):
     """分析 BiLSTM_att 模型的注意力权重分布"""
@@ -40,4 +91,6 @@ def analysis_attention(model_path):
     print(f"注意力权重分布: {alpha}")
 
 if __name__ == "__main__":
-    analysis_attention("./result/BiLSTM_att/best_model.pt")
+    # analysis_attention("./result/BiLSTM_att/best_model.pt")
+    config = Config(dataset="./mydatasets/jieba", embedding="sogou", dataset_method="jieba")
+    save_hyperparameters(config, embedding="sogou")
