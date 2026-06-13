@@ -91,10 +91,63 @@ adamW增加了weight_decay：用于减小权重，越大时模型参数会越小
 lr调度器：step（每隔几个epoch，将lr乘上系数gamma）；cosine（随着epoch缓慢降低学习率）
 
 
-测试小样本（10000个训练数据，1000个测试和验证集）
+测试没有使用预训练词向量下，jieba分词的结果，在attention下
+
+![1781248607781](image/report/training_curves.png)
 
 出现了一个非常奇怪的现象，就是验证集的准确率平稳慢慢上升，但是loss竟然也在大幅度上升
 
-![1781248607781](image/report/1781248607781.png)
+原因：根据CE公式，当模型对错误样本过于自信会导致loss极端上升，一般由于过拟合导致，可以看到train 的acc非常高
 
-原因：根据CE公式，当模型对错误样本过于自信会导致loss极端上升
+### bilstm+jieba+无预训练向量
+
+有 attention 的时候：9,290,763，在P4 GPU 上面大约23.9s （触发了早停）
+没有 attention 的时候：9,290,507，大约15.3 s（也触发了早停）
+
+```
+DATASET_SEED   = 1234
+DATASET_SPLIT  = 0.9
+
+self.seed = 1234
+
+# model
+self.model_name = 'BiLSTM'                                  # !模型名称
+self.hidden_size = 128                                      # lstm隐藏层
+self.num_layers = 2                                         # lstm层数
+self.hidden_size2 = 64
+
+# train
+self.dropout = 0.5                                              # 随机失活
+self.num_epochs = 10                                            # epoch数
+self.batch_size = 128                                           # mini-batch大小
+self.learning_rate = 1e-3                                       # 学习率
+self.weight_decay = 1e-4                                        # 权重衰减（L2正则化）
+self.scheduler = {                                              # 学习率调度策略及参数
+    "name": "cosine", 
+}   
+self.embed = 300                                                # 字向量维度, 若使用了预训练词向量，则维度统一
+self.patience = 1000                                            # 若超过 1000 batch F1还没提升，则提前结束训练
+self.grad_clip = 5.0                                            # 梯度裁剪阈值
+
+# train_print
+self.print_step = 10                                            # 每多少步打印一次训练状态
+
+#dataset
+self.pad_size = 64                                              # 每句话处理成的长度(长切)
+```
+
+
+### 预训练词向量
+
+使用预训练词向量，使用 https://github.com/Embedding/Chinese-Word-Vectors 中的 Word + Character，SGNS得到的300维的词向量（基于人民日报训练），对于jieba级别的分词：4241/28125 找不到预训练的token数量；对于字符级别：213/4631 找不到词向量
+找不到词向量的使用 mean=0,std=0.1的正态分布随机值
+
+
+
+### 字符级别分词
+
+用字符级别分词，由于文本多为短文本，而中文不像英文，中文单独的字是有明确含义的
+
+![alt text](image/report/image.png)
+
+可以看到词表大小仅为 4600，但压缩率较低，一般 unicode 三个字节表示一个中文字符。
