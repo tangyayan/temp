@@ -211,6 +211,15 @@ $$w_c = \frac{\text{总样本数}}{类别数 \times 该类样本数}$$
 
 ### transformer
 
+$\text{output} = \text{Norm}( x + \text{DropOut}(\text{layer}(x)))$
+
+Norm 表示任意一种归一化方法。在原理上，后向归一化具有很多优势。首
+先，有助于加快神经网络的训练收敛速度，使模型可以更有效地传播梯度，从而
+减少训练时间。其次，后向归一化可以降低神经网络对于超参数（如学习率、初始
+化参数等）的敏感性，使得网络更容易调优，并减少了超参数调整的难度。
+
+先dropout，不破坏主干信息
+
 #### 绝对位置编码
 
 $$
@@ -218,3 +227,16 @@ PE(pos,2i)=\sin\left(\frac{pos}{10000^{2i/d}}\right)\\
 
 PE(pos,2i+1)=\cos\left(\frac{pos}{10000^{2i/d}}\right)
 $$
+
+### 混淆矩阵
+
+finance 和 tech
+world 和 military
+finance 和 stock
+
+隐藏层只能调为256，512时间会显著上升
+
+lr不能太大（1e-3），容易导致验证集loss上升
+
+  "accuracy": 0.5499846829367916,
+  "macro_f1": 0.5248928043753567,
