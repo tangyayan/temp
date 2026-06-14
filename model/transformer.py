@@ -78,31 +78,38 @@ class Transformer(nn.Module):
             self.embedding = nn.Embedding.from_pretrained(config.embedding_pretrained, freeze=False)
         else:
             self.embedding = nn.Embedding(config.n_vocab, config.embed, padding_idx=PAD_IDX)
-        self.pos_encoder = PositionalEncoding(config.pad_size+1, config.embed, config.dropout) # [cls]
+        self.pos_encoder = PositionalEncoding(config.pad_size, config.embed, config.dropout) # [cls]
         self.layers = nn.ModuleList([TransformerBlock(config) for _ in range(config.num_layers)])
         self.fc_out = nn.Linear(config.embed, config.num_classes)
-        self.cls_emb = nn.Parameter(torch.randn(1, 1, config.embed))  # [1, 1, D_model]
-        # self.attention_pooling = AttentionPooling(config.embed)
+
+        if config.pooling == 'cls':
+            self.cls_emb = nn.Parameter(torch.randn(1, 1, config.embed))  # [1, 1, D_model]
+        else:
+            self.attention_pooling = AttentionPooling(config.embed)
+        self.pooling = config.pooling
 
     def forward(self, x, seq_lens):
         x = self.embedding(x)  # [B, L, D]
 
         # cls
-        cls = self.cls_emb.expand(x.size(0), -1, -1)  # [B, 1, D_model]
-        x = torch.cat([cls, x], dim=1)  # [B, L+1, D]
-        seq_lens = seq_lens + 1  # cls占一个位置
+        if self.pooling == 'cls': # 已经在dataset中截断了，所以这里直接拼接cls
+            cls = self.cls_emb.expand(x.size(0), -1, -1)  # [B, 1, D_model]
+            x = torch.cat([cls, x], dim=1)  # [B, L+1, D]
+            seq_lens = seq_lens + 1  # cls占一个位置
 
         x = self.pos_encoder(x)
         for layer in self.layers:
             x = layer(x, seq_lens) # [B, L, D]
         
         # cls
-        cls_out = x[:, 0, :]  # [B, D_model]
-        x = self.fc_out(cls_out)  # [B, num_classes]
+        if self.pooling == 'cls':
+            cls_out = x[:, 0, :]  # [B, D_model]
+            x = self.fc_out(cls_out)  # [B, num_classes]
 
         # attention pooling
-        # x = self.attention_pooling(x, seq_lens)  # [B, D_model]
-        # x = self.fc_out(x)  # [B, num_classes]
+        if self.pooling == 'attention':
+            x = self.attention_pooling(x, seq_lens)  # [B, D_model]
+            x = self.fc_out(x)  # [B, num_classes]
         return x
 
 class AttentionPooling(nn.Module):
@@ -141,7 +148,7 @@ if __name__ == "__main__":
         data = json.load(f)
         conf.n_vocab = data["vocab_size"]
     model = Transformer(conf)
-    input_ids = torch.tensor([[1, 2, 3, 4, 0], [5, 6, 7, 0, 0]])  # [B, L]
-    seq_lens = torch.tensor([4, 3])  # [B]
+    input_ids = torch.tensor([[1, 2, 3, 4, 5], [5, 6, 7, 0, 0]])  # [B, L]
+    seq_lens = torch.tensor([5, 3])  # [B]
     output = model(input_ids, seq_lens)
     print(output.shape)  # 应该是 [B, num_classes]
