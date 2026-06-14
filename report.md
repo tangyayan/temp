@@ -238,5 +238,13 @@ finance 和 stock
 
 lr不能太大（1e-3），容易导致验证集loss上升
 
+Transformer_jieba_sogou_cls:目前最好的数据（当头变多了，acc不一定上升）
   "accuracy": 0.5499846829367916,
-  "macro_f1": 0.5248928043753567,
+  "macro_f1": 0.5267908844712685,
+
+transformer很少出现过拟合的现象，以及学习率调度如果使用step会下降2个百分点（acc）
+
+对于 cls 方法:  9475427
+attention：    9475428
+bilstm_att：   9290763
+bilstm：       9290507
