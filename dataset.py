@@ -37,8 +37,12 @@ class TNEWSDataset(Dataset):
                     label_str = str(r["label"])
                     assert(label_str in LABEL2IDX), f"标签 {label_str} 不在有效标签列表中。"
                     tokens = r["tokens"]
-                    if len(tokens) > config.pad_size: # 截断
-                        tokens = tokens[:config.pad_size]
+                    if config.model_name == "Transformer" and config.pooling == "cls":
+                        if len(tokens) >= config.pad_size: # 截断，留一个位置给cls
+                            tokens = tokens[:config.pad_size-1]
+                    else:
+                        if len(tokens) > config.pad_size: # 截断
+                            tokens = tokens[:config.pad_size]
                     input_ids = [self.vocab.get(t, self.vocab[UNK_TOKEN]) for t in tokens]
                     self.samples.append({
                         "input_ids":  torch.tensor(input_ids, dtype=torch.long), # (pad_size,)
@@ -55,13 +59,6 @@ class TNEWSDataset(Dataset):
     def __getitem__(self, idx):
         return self.samples[idx]
 
-
-def collate_fn(batch):
-    """将 list of dict 合并为 batch tensors。"""
-    input_ids = torch.stack([x["input_ids"] for x in batch])   # (B, L)
-    labels    = torch.stack([x["label"]     for x in batch])   # (B,)
-    seq_lens   = torch.tensor([x["seq_len"]    for x in batch]) # (B,)
-    return {"input_ids": input_ids, "labels": labels, "seq_lens": seq_lens}
 
 from torch.nn.utils.rnn import pad_sequence
 import torch
