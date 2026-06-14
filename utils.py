@@ -18,6 +18,21 @@ def load_jsonl(path):
 
 def save_hyperparameters(conf: Config, embedding, elapsed_time):
     """将超参数保存到 JSON 文件"""
+
+    if conf.model_name == 'BiLSTM' or conf.model_name == 'BiLSTM_att':
+        model_dict = {
+            "model_name": conf.model_name,
+            "hidden_size": conf.hidden_size,
+            "num_layers": conf.num_layers,
+            "hidden_size2": conf.hidden_size2,
+        }
+    else:
+        model_dict = {
+            "model_name": conf.model_name,
+            "hidden_size": conf.hidden_size,
+            "num_heads": conf.num_heads,
+            "num_layers": conf.num_layers,
+        }
     
     hyperparams = {
         # 全局常量
@@ -28,12 +43,7 @@ def save_hyperparameters(conf: Config, embedding, elapsed_time):
         "seed": conf.seed,
         
         # 模型参数
-        "model": {
-            "model_name": conf.model_name,
-            "hidden_size": conf.hidden_size,
-            "num_layers": conf.num_layers,
-            "hidden_size2": conf.hidden_size2,
-        },
+        "model": model_dict,
         
         # 训练参数
         "train": {
