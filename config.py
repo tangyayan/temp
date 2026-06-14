@@ -11,21 +11,27 @@ DATASET_SPLIT    = 0.9
 
 class Config(object):
     """配置参数"""
-    def __init__(self, dataset, embedding, dataset_method):
+    def __init__(self, dataset, embedding, dataset_method, model_name='Transformer'):
         # init
         self.seed = 1234
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   # 设备
 
         # model
-        self.model_name = 'BiLSTM'                                  # !模型名称
+        self.model_name = model_name                                  # !模型名称
         self.embedding_pretrained = torch.load(f'{dataset}/{embedding}.pt', weights_only=True)\
             if embedding != 'random' else None                          # 预训练词向量
-        self.hidden_size = 128                                          # lstm隐藏层
-        self.num_layers = 2                                             # lstm层数
-        self.hidden_size2 = 64
+        if self.model_name == 'BiLSTM' or self.model_name == 'BiLSTM_att':
+            self.hidden_size = 128                                          # lstm隐藏层
+            self.num_layers = 2                                             # lstm层数
+            self.hidden_size2 = 64                                          # 前向中间隐藏层
+        elif self.model_name == 'Transformer':
+            self.num_heads = 4                                               # 多头注意力头数
+            self.hidden_size = 256                                           # transformer隐藏层
+            self.num_layers = 2                                              # transformer层数
+            self.pooling = 'cls'                                             # transformer池化方法，cls或attention
 
         # output
-        self.save_dir = f'./result/{self.model_name}_{dataset_method}_{embedding}'    # 模型训练结果保存路径                  
+        self.save_dir = f'./result/{self.model_name}_{dataset_method}_{embedding}_{self.pooling}'  # 模型训练结果保存路径                
 
         # train
         self.dropout = 0.5                                              # 随机失活
@@ -34,8 +40,8 @@ class Config(object):
         self.learning_rate = 5e-4                                       # 学习率
         self.weight_decay = 5e-4                                        # 权重衰减（L2正则化）
         self.scheduler = {                                              # 学习率调度策略及参数
-            "name": "cosine", 
-            # "step_size": 5, "gamma": 0.5
+            "name": "step", 
+            "step_size": 5, "gamma": 0.5
         }   
         self.embed = self.embedding_pretrained.size(1)\
             if self.embedding_pretrained is not None else 300           # 字向量维度, 若使用了预训练词向量，则维度统一
@@ -48,7 +54,7 @@ class Config(object):
 
         #dataset
         self.n_vocab = 0                                                # 词表大小，在运行时赋值!
-        self.pad_size = 128                                             # 每句话处理成的长度(长切)
+        self.pad_size = 64                                             # 每句话处理成的长度(长切)
         self.dataset_method = dataset_method                            # 数据集预处理方法，jieba 或 sentencepiece
         self.num_classes = 15                                           # 类别数
         if self.dataset_method == "jieba" or self.dataset_method == "char":
