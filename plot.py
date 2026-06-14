@@ -229,6 +229,11 @@ def draw_confusion_matrix(test_result_path: str, save_dir: str):
     with open(test_result_path, "r") as f:
         test_metrics = json.load(f)
     cm = np.array(test_metrics["confusion_matrix"])
+
+    # 归一化
+    cm_sum = cm.sum(axis=1, keepdims=True)
+    cm = cm / np.where(cm_sum == 0, 1, cm_sum)  # 避免除以零
+
     from sklearn.metrics import ConfusionMatrixDisplay
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=LABELSTR)
     fig, ax = plt.subplots(figsize=(12, 10)) 
