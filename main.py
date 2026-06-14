@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, Subset
 from dataset import TNEWSDataset, collate_fn
 from model.bilstm_att import BiLSTM_att
 from model.bilstm import BiLSTM 
+from model.transformer import Transformer
 from train import train, final_test
 from config import Config
 from utils import save_hyperparameters
@@ -23,10 +24,11 @@ def count_parameters(model) -> int:
 
 
 def main():
-    dataset = "./mydatasets/char"  
+    dataset = "./mydatasets/jieba"  
     embedding = "sogou"  # "sogou" 或 "random"
-    datamethod = "char"  # "jieba" 或 "char" 
-    conf = Config(dataset=dataset, embedding=embedding, dataset_method=datamethod)
+    datamethod = "jieba"  # "jieba" 或 "char" 
+    model_name = "Transformer"  # "BiLSTM_att", "BiLSTM" 或 "Transformer"
+    conf = Config(dataset=dataset, embedding=embedding, dataset_method=datamethod, model_name=model_name)
 
     torch.manual_seed(conf.seed)
     if torch.cuda.is_available():
@@ -67,6 +69,8 @@ def main():
         model = BiLSTM_att(conf).to(device)
     elif conf.model_name == "BiLSTM":
         model = BiLSTM(conf).to(device)
+    elif conf.model_name == "Transformer":
+        model = Transformer(conf).to(device)
     else:
         raise NotImplementedError(f"模型 {conf.model_name} 尚未实现")
 
