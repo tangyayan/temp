@@ -246,5 +246,7 @@ transformer很少出现过拟合的现象，以及学习率调度如果使用ste
 
 对于 cls 方法:  9475427
 attention：    9475428
+mean:          9475127
+mean+char      2426927 (embedding层占了很多)
 bilstm_att：   9290763
 bilstm：       9290507
