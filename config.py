@@ -18,7 +18,6 @@ class Config(object):
 
         # model
         self.model_name = model_name                                  # !模型名称
-        output_name = model_name                                      # 输出模型名称
         self.embedding_pretrained = torch.load(f'{dataset}/{embedding}.pt', weights_only=True)\
             if embedding != 'random' else None                          # 预训练词向量
         if self.model_name == 'BiLSTM' or self.model_name == 'BiLSTM_att':
@@ -30,10 +29,11 @@ class Config(object):
             self.hidden_size = 256                                           # transformer隐藏层
             self.num_layers = 2                                              # transformer层数
             self.pooling = 'cls'                                             # transformer池化方法，cls或attention
-            output_name += f'_{self.pooling}'
 
         # output
-        self.save_dir = f'./result/{output_name}_{dataset_method}_{embedding}'  # 模型训练结果保存路径                
+        self.save_dir = f'./result/{model_name}_{dataset_method}_{embedding}'  # 模型训练结果保存路径
+        if self.model_name == 'Transformer':
+            self.save_dir += f'_{self.pooling}'                
 
         # train
         self.dropout = 0.5                                              # 随机失活
@@ -42,21 +42,24 @@ class Config(object):
         self.learning_rate = 5e-4                                       # 学习率
         self.weight_decay = 5e-4                                        # 权重衰减（L2正则化）
         self.scheduler = {                                              # 学习率调度策略及参数
-            "name": "step", 
-            "step_size": 5, "gamma": 0.5
+            "name": "cosine", 
+            # "step_size": 5, "gamma": 0.5
         }   
         self.embed = self.embedding_pretrained.size(1)\
             if self.embedding_pretrained is not None else 300           # 字向量维度, 若使用了预训练词向量，则维度统一
         self.patience = 1000                                            # 若超过 1000 batch F1还没提升，则提前结束训练
         self.grad_clip = 5.0                                            # 梯度裁剪阈值
-        self.ce_weights = False                                          # 是否使用类别权重（针对类别不平衡问题）
+        self.ce_weights = True                                          # 是否使用类别权重（针对类别不平衡问题）
 
         # train_print
         self.print_step = 10                                            # 每多少步打印一次训练状态
 
         #dataset
         self.n_vocab = 0                                                # 词表大小，在运行时赋值!
-        self.pad_size = 64                                             # 每句话处理成的长度(长切)
+        if dataset_method == "jieba":
+            self.pad_size = 64                                             # 每句话处理成的长度(长切)
+        else:
+            self.pad_size = 128
         self.dataset_method = dataset_method                            # 数据集预处理方法，jieba 或 sentencepiece
         self.num_classes = 15                                           # 类别数
         if self.dataset_method == "jieba" or self.dataset_method == "char":
