@@ -84,6 +84,8 @@ class Transformer(nn.Module):
 
         if config.pooling == 'cls':
             self.cls_emb = nn.Parameter(torch.randn(1, 1, config.embed))  # [1, 1, D_model]
+        elif config.pooling == 'mean':
+            self.mean_pooling = MeanPooling()
         else:
             self.attention_pooling = AttentionPooling(config.embed)
         self.pooling = config.pooling
@@ -103,13 +105,17 @@ class Transformer(nn.Module):
         
         # cls
         if self.pooling == 'cls':
-            cls_out = x[:, 0, :]  # [B, D_model]
-            x = self.fc_out(cls_out)  # [B, num_classes]
+            x = x[:, 0, :]  # [B, D_model]
 
         # attention pooling
         if self.pooling == 'attention':
             x = self.attention_pooling(x, seq_lens)  # [B, D_model]
-            x = self.fc_out(x)  # [B, num_classes]
+
+        # mean pooling
+        if self.pooling == 'mean':
+            x = self.mean_pooling(x, seq_lens)  # [B, D_model]
+        
+        x = self.fc_out(x)  # [B, num_classes]
         return x
 
 class AttentionPooling(nn.Module):
@@ -127,6 +133,19 @@ class AttentionPooling(nn.Module):
         pooled = attn_weights.unsqueeze(-1) * x  # [B, L, D]
         pooled = pooled.sum(dim=1)  # [B, D]
         return pooled
+
+class MeanPooling(nn.Module):
+    def __init__(self):
+        super(MeanPooling, self).__init__()
+
+    def forward(self, x, seq_lens):
+        B, L, _ = x.size()
+        mask = torch.arange(L, device=x.device).expand(B, L)
+        mask = mask < seq_lens.unsqueeze(1) # [B, L]
+        masked_x = x.masked_fill(~mask.unsqueeze(-1), 0.0)  # [B, L, D]
+        sum_x = masked_x.sum(dim=1)  # [B, D]
+        mean_x = sum_x / seq_lens.unsqueeze(1)  # [B, D]
+        return mean_x
 
 class TransformerBlock(nn.Module):
     def __init__(self, config: Config):

@@ -20,10 +20,7 @@ VALID_LABELS = {
 
 def filter_and_deduplicate(records, split="train"):
     """
-    去除：
-      1. sentence 纯空白或空的样本
-      2. 完全重复的 (sentence, label) 对
-      3. label 不在合法集合中的样本
+    去除空文本、非法标签和重复样本，并统计各类情况
     """
     total_raw = len(records)
     removed_empty   = 0
@@ -46,7 +43,7 @@ def filter_and_deduplicate(records, split="train"):
             removed_illegal += 1
             continue
 
-        # 重复样本（以原始文本+标签为 key）
+        # 重复样本
         key = (sentence.strip(), label)
         if key in seen:
             removed_dup += 1
