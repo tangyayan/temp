@@ -18,6 +18,7 @@ class Config(object):
 
         # model
         self.model_name = model_name                                  # !模型名称
+        output_name = model_name                                      # 输出模型名称
         self.embedding_pretrained = torch.load(f'{dataset}/{embedding}.pt', weights_only=True)\
             if embedding != 'random' else None                          # 预训练词向量
         if self.model_name == 'BiLSTM' or self.model_name == 'BiLSTM_att':
@@ -29,9 +30,10 @@ class Config(object):
             self.hidden_size = 256                                           # transformer隐藏层
             self.num_layers = 2                                              # transformer层数
             self.pooling = 'cls'                                             # transformer池化方法，cls或attention
+            output_name += f'_{self.pooling}'
 
         # output
-        self.save_dir = f'./result/{self.model_name}_{dataset_method}_{embedding}_{self.pooling}'  # 模型训练结果保存路径                
+        self.save_dir = f'./result/{output_name}_{dataset_method}_{embedding}'  # 模型训练结果保存路径                
 
         # train
         self.dropout = 0.5                                              # 随机失活
