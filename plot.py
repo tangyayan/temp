@@ -242,6 +242,19 @@ def draw_confusion_matrix(test_result_path: str, save_dir: str):
     plt.savefig(os.path.join(save_dir, "confusion_matrix.png"))
     print(f"混淆矩阵已保存至: {os.path.join(save_dir, 'confusion_matrix.png')}")
 
+def draw_lr_curve(history: dict, save_dir: str):
+    lrs = history["lr"]
+    epoch = range(1, len(lrs) + 1)
+
+    plt.figure(figsize=(8, 4))
+    plt.plot(epoch, lrs, marker="o", color="#FF7F0E")
+    plt.title("Learning Rate Schedule")
+    plt.xlabel("Global Step")
+    plt.ylabel("Learning Rate")
+    plt.grid(True, alpha=0.3)
+    plt.savefig(os.path.join(save_dir, "learning_rate_curve.png"))
+    print(f"学习率曲线已保存至: {os.path.join(save_dir, 'learning_rate_curve.png')}")
+
 def main():
     parser = argparse.ArgumentParser(description="绘制训练曲线")
     parser.add_argument("--model_name", default="BiLSTM", help="模型文件名")
