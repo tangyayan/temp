@@ -1,10 +1,3 @@
-"""
-main.py — 主程序入口
-
-用法示例：
-    python main.py
-"""
-
 import os
 import time
 import json
