@@ -42,8 +42,8 @@ class Config(object):
         self.learning_rate = 5e-4                                       # 学习率
         self.weight_decay = 5e-4                                        # 权重衰减（L2正则化）
         self.scheduler = {                                              # 学习率调度策略及参数
-            "name": "cosine", 
-            # "step_size": 5, "gamma": 0.5
+            "name": "step", 
+            "step_size": 5, "gamma": 0.5
         }   
         self.embed = self.embedding_pretrained.size(1)\
             if self.embedding_pretrained is not None else 300           # 字向量维度, 若使用了预训练词向量，则维度统一
